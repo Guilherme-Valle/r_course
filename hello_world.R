@@ -240,14 +240,89 @@ head(dfDate4)
 
 ?read.csv
 
-install.packages("readr")
-library(readr)
-?read_csv
-
-viagens <- read.csv(
-  file = "~/Downloads/2019_20210207_Viagens/2019_Viagem.csv",
-  sep = ';',
-  dec = ',',
-  fileEncoding = 'UTF-8'
+diabetes <- read.csv(
+  file = "~/Downloads/diabetes.csv"
 )
 
+head(diabetes)
+
+#TIPOS DE DADOS
+str(diabetes)
+
+# colunas nao preenchidas
+colSums(is.na(diabetes))
+
+#MEDIA, MEDIANA, MAX ETC
+summary(diabetes$Insulin)
+
+# grafico dados
+boxplot(diabetes$Insulin)
+
+boxplot(diabetes)
+
+#hist = histograma
+hist(diabetes$Pregnancies)
+hist(diabetes$Age)
+hist(diabetes$Insulin)
+hist(diabetes$BMI)
+library(dplyr)
+
+diabetes2 <- diabetes %>% 
+  filter(Insulin <= 250)
+boxplot(diabetes2$Insulin)
+
+boxplot(diabetes2)
+summary(diabetes2$Insulin)
+
+# construção do modelo
+install.packages("caTools")
+library(caTools)
+set.seed(123)
+
+#divisão dos dados
+index = sample.split(diabetes2$Pregnancies, SplitRatio = .70)
+
+#treino e teste, 70% para treino 30% para teste
+
+train = subset(diabetes2, index == TRUE)
+test = subset(diabetes2, index == FALSE)
+
+dim(diabtrain)
+dim(train)
+dim(test)
+
+install.packages("caret")
+install.packages("e1071")
+library(caret)
+library(e1071)
+
+?caret::train
+
+modelo <- train(Outcome ~., data = train, method = 'knn')
+modelo$results
+modelo$bestTune
+
+modelo2 <- train(Outcome ~., data = train, method = 'knn',
+                 tuneGrid = expand.grid(k = c(1:20)))
+modelo2$results
+modelo2$bestTune
+
+plot(modelo2)
+
+modelo3 <- train(Outcome ~., data = train, method = "naive_bayes")
+
+
+set.seed(100)
+modelo4 <- train(Outcome ~., data = train, method = "svmRadialSigma"
+,preProcess=c("center"))
+
+modelo4$results
+modelo4$bestTune
+
+predicoes <- predict(modelo4, test)
+
+predicoes
+
+confusionMatrix(predicoes, test$Outcome)
+
+write.csv(predicoes, 'resultado.csv')
